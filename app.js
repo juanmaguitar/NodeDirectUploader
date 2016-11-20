@@ -13,26 +13,28 @@
  */
 const express = require('express');
 const aws = require('aws-sdk');
+const bodyParser = require('body-parser')
+
 
 /*
  * Set-up and run the Express app.
  */
 const app = express();
 app.set('views', './views');
-app.use(express.static('./public'));
+app.use( express.static('./public') );
 app.engine('html', require('ejs').renderFile);
-app.listen(process.env.PORT || 3000);
+
+// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: false }))
+
+// parse application/json
+app.use(bodyParser.json())
 
 /*
  * Load the S3 information from the environment variables.
  */
 const S3_BUCKET = process.env.S3_BUCKET;
 
-/*
- * Respond to GET requests to /account.
- * Upon request, render the 'account.html' web page in views/ directory.
- */
-app.get('/account', (req, res) => res.render('account.html'));
 
 /*
  * Respond to GET requests to /sign-s3.
@@ -50,6 +52,7 @@ app.get('/sign-s3', (req, res) => {
     ContentType: fileType,
     ACL: 'public-read'
   };
+  console.log(s3Params);
 
   s3.getSignedUrl('putObject', s3Params, (err, data) => {
     if(err){
@@ -71,5 +74,8 @@ app.get('/sign-s3', (req, res) => {
  * a way that suits your application.
  */
 app.post('/save-details', (req, res) => {
-  // TODO: Read POSTed form data and do something useful
+  res.json(req.body)
 });
+
+
+app.listen(process.env.PORT || 3000, () => console.log("Listening..."));
